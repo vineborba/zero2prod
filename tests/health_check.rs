@@ -7,6 +7,8 @@ use zero2prod::configuration::{get_configuration, DatabaseSettings};
 pub struct TestApp {
     pub address: String,
     pub db_pool: PgPool,
+    pub db_name: String,
+    pub db_connection_string: String,
 }
 
 async fn spawn_app() -> TestApp {
@@ -28,6 +30,8 @@ async fn spawn_app() -> TestApp {
     TestApp {
         address,
         db_pool: connection_pool,
+        db_name: configuration.database.database_name.clone(),
+        db_connection_string: configuration.database.connection_string_without_name(),
     }
 }
 
@@ -53,6 +57,19 @@ pub async fn configure_database(config: &DatabaseSettings) -> PgPool {
     connection_pool
 }
 
+pub async fn teardown(app: TestApp) {
+    app.db_pool.close().await;
+
+    let mut connection = PgConnection::connect(&app.db_connection_string)
+        .await
+        .expect("Failed to connecto to Postgres");
+
+    connection
+        .execute(format!(r#"DROP DATABASE "{}";"#, &app.db_name).as_str())
+        .await
+        .expect("Failed to create database.");
+}
+
 #[actix_web::test]
 async fn health_check_works() {
     let app = spawn_app().await;
@@ -65,9 +82,10 @@ async fn health_check_works() {
         .await
         .expect("Failed to execute request!");
 
-    dbg!(&response);
     assert!(response.status().is_success());
     assert_eq!(Some(0), response.content_length());
+
+    teardown(app).await;
 }
 
 #[actix_web::test]
@@ -93,6 +111,8 @@ async fn subscribe_returns_200_for_valid_form() {
 
     assert_eq!(saved.email, "ursula_le_guin@gmail.com");
     assert_eq!(saved.name, "le guin");
+
+    teardown(app).await;
 }
 
 #[actix_web::test]
@@ -121,4 +141,6 @@ async fn subscribe_returns_400_for_invalid_data() {
             error_message
         );
     }
+
+    teardown(app).await;
 }
