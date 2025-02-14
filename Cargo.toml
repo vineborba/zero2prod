@@ -17,6 +17,7 @@ config = "0.15"
 reqwest = "0.12"
 secrecy = { version = "0.10", features = ["serde"] }
 serde = { version = "1", features = ["derive"] }
+serde-aux = "4"
 sqlx = { version = "0.8", default-features = false, features = [
   "runtime-tokio-rustls",
   "macros",

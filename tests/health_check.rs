@@ -1,5 +1,5 @@
 use once_cell::sync::Lazy;
-use secrecy::ExposeSecret;
+use sqlx::postgres::PgConnectOptions;
 use sqlx::{Connection, Executor, PgConnection, PgPool};
 use std::net::TcpListener;
 use uuid::Uuid;
@@ -26,7 +26,7 @@ pub struct TestApp {
     pub address: String,
     pub db_pool: PgPool,
     pub db_name: String,
-    pub db_connection_string: String,
+    pub db_connection_options: PgConnectOptions,
 }
 
 async fn spawn_app() -> TestApp {
@@ -50,26 +50,21 @@ async fn spawn_app() -> TestApp {
         address,
         db_pool: connection_pool,
         db_name: configuration.database.database_name.clone(),
-        db_connection_string: configuration
-            .database
-            .connection_string_without_name()
-            .expose_secret()
-            .to_string(),
+        db_connection_options: configuration.database.without_db(),
     }
 }
 
 pub async fn configure_database(config: &DatabaseSettings) -> PgPool {
-    let mut connection =
-        PgConnection::connect(config.connection_string_without_name().expose_secret())
-            .await
-            .expect("Failed to connecto to Postgres");
+    let mut connection = PgConnection::connect_with(&config.without_db())
+        .await
+        .expect("Failed to connecto to Postgres");
 
     connection
         .execute(format!(r#"CREATE DATABASE "{}";"#, config.database_name).as_str())
         .await
         .expect("Failed to create database.");
 
-    let connection_pool = PgPool::connect(config.connection_string().expose_secret())
+    let connection_pool = PgPool::connect_with(config.with_db())
         .await
         .expect("Failed to connecto to Postgres");
 
@@ -84,7 +79,7 @@ pub async fn configure_database(config: &DatabaseSettings) -> PgPool {
 pub async fn teardown(app: TestApp) {
     app.db_pool.close().await;
 
-    let mut connection = PgConnection::connect(&app.db_connection_string)
+    let mut connection = PgConnection::connect_with(&app.db_connection_options)
         .await
         .expect("Failed to connecto to Postgres");
 
