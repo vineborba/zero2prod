@@ -1,8 +1,14 @@
 application:
   port: 8000
+
 database:
   host: "localhost"
   port: 5432
   password: "postgres"
   username: "postgres"
   database_name: "newsletter"
+
+email_client:
+  base_url: localhost
+  sender_email: dev@example.com
+  authorization_token: super-secret-value
