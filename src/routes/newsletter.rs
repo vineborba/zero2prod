@@ -41,10 +41,10 @@ pub async fn publish_newsletter(
     email_client: web::Data<EmailClient>,
 ) -> Result<HttpResponse, PublishError> {
     let credentials = basic_authentication(request.headers()).map_err(PublishError::AuthError)?;
-    tracing::Span::current().record("username", &tracing::field::display(&credentials.username));
+    tracing::Span::current().record("username", tracing::field::display(&credentials.username));
 
     let user_id = validate_credentials(credentials, &pool).await?;
-    tracing::Span::current().record("user_id", &tracing::field::display(&user_id));
+    tracing::Span::current().record("user_id", tracing::field::display(&user_id));
 
     let subscribers = get_confirmed_subscribers(&pool).await?;
 
@@ -160,7 +160,7 @@ async fn validate_credentials(
     );
 
     if let Some((stored_user_id, stored_password_hash)) =
-        get_stored_credentials(&credentials.username, &pool)
+        get_stored_credentials(&credentials.username, pool)
             .await
             .map_err(PublishError::UnexpectedError)?
     {
@@ -186,7 +186,7 @@ fn verify_password_hash(
     expected_password_hash: SecretString,
     password_candidate: SecretString,
 ) -> Result<(), PublishError> {
-    let expected_password_hash = PasswordHash::new(&expected_password_hash.expose_secret())
+    let expected_password_hash = PasswordHash::new(expected_password_hash.expose_secret())
         .context("Failed to parse hash in PHC string format.")
         .map_err(PublishError::UnexpectedError)?;
 
