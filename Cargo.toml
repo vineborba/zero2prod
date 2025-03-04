@@ -12,6 +12,7 @@ name = "zero2prod"
 
 [dependencies]
 actix-web = "4"
+anyhow = "1"
 chrono = { version = "0.4", default-features = false, features = ["clock"] }
 config = "0.15"
 rand = { version = "0.9", features = ["std_rng"] }
@@ -30,6 +31,7 @@ sqlx = { version = "0.8", default-features = false, features = [
   "chrono",
   "migrate",
 ] }
+thiserror = "2"
 tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
 tracing = { version = "0.1", features = ["log"] }
 tracing-actix-web = "0.7"
