@@ -3,7 +3,7 @@ use std::{fmt::Debug, ops::DerefMut, str};
 use actix_web::{http::StatusCode, web, HttpResponse, ResponseError};
 use anyhow::Context;
 use chrono::Utc;
-use rand::{distr::Alphanumeric, Rng};
+use rand::{distributions::Alphanumeric, Rng};
 use sqlx::{PgPool, Postgres, Transaction};
 use uuid::Uuid;
 
@@ -102,7 +102,7 @@ impl ResponseError for SubscribeError {
 }
 
 fn generate_subscription_token() -> String {
-    let mut rng = rand::rng();
+    let mut rng = rand::thread_rng();
     std::iter::repeat_with(|| rng.sample(Alphanumeric))
         .map(char::from)
         .take(25)
