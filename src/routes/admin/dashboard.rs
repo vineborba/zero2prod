@@ -4,9 +4,10 @@ use actix_web::{
 };
 use anyhow::Context;
 use sqlx::PgPool;
+use tera::Tera;
 use uuid::Uuid;
 
-use crate::session_state::TypedSession;
+use crate::{routes::ServerError, session_state::TypedSession};
 
 fn e500<T>(e: T) -> actix_web::Error
 where
@@ -18,6 +19,7 @@ where
 pub async fn admin_dashboard(
     session: TypedSession,
     pool: web::Data<PgPool>,
+    tera: web::Data<Tera>,
 ) -> Result<HttpResponse, actix_web::Error> {
     let username = if let Some(user_id) = session.get_user_id().map_err(e500)? {
         get_username(user_id, &pool).await.map_err(e500)?
@@ -27,21 +29,17 @@ pub async fn admin_dashboard(
             .finish());
     };
 
+    let mut context = tera::Context::new();
+
+    context.insert("username", &username);
+
+    let template = tera
+        .render("admin-dashboard.tera.html", &context)
+        .map_err(|e| ServerError::RenderError(e.into()))?;
+
     Ok(HttpResponse::Ok()
         .content_type(ContentType::html())
-        .body(format!(
-            r#"<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin dashboard</title>
-</head>
-<body>
-    <p>Welcome {username}!</p>
-</body>
-</html>"#,
-        )))
+        .body(template))
 }
 
 async fn get_username(user_id: Uuid, pool: &PgPool) -> Result<String, anyhow::Error> {

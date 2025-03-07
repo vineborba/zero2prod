@@ -1,47 +1,33 @@
 use actix_web::{
     cookie::{time::Duration, Cookie},
     http::header::ContentType,
-    HttpResponse,
+    web, HttpResponse,
 };
 use actix_web_flash_messages::{IncomingFlashMessages, Level};
-use std::fmt::Write;
+use tera::{Context, Tera};
 
-pub async fn login_form(flash_messages: IncomingFlashMessages) -> HttpResponse {
-    let mut error_html = String::new();
+use crate::routes::ServerError;
+
+pub async fn login_form(
+    flash_messages: IncomingFlashMessages,
+    tera: web::Data<Tera>,
+) -> Result<HttpResponse, ServerError> {
+    let mut error_html: Option<String> = None;
 
     for m in flash_messages.iter().filter(|m| m.level() == Level::Error) {
-        writeln!(error_html, "<p><i>{}</i></p>", m.content()).unwrap();
+        error_html = Some(m.content().into());
     }
 
-    HttpResponse::Ok()
+    let mut context = Context::new();
+
+    context.insert("error_html", &error_html);
+
+    let template = tera
+        .render("login.tera.html", &context)
+        .map_err(|e| ServerError::RenderError(e.into()))?;
+
+    Ok(HttpResponse::Ok()
         .content_type(ContentType::html())
         .cookie(Cookie::build("_flash", "").max_age(Duration::ZERO).finish())
-        .body(format!(
-            r#"
-            <!DOCTYPE html>
-<html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login</title>
-</head>
-
-<body>
-    {error_html}
-    <form action="/login" method="post">
-        <label>Username
-            <input type="text" placeholder="Enter Username" name="username">
-        </label>
-
-        <label>Password
-            <input type="password" placeholder="Enter Password" name="password">
-        </label>
-
-        <button type="submit">Login</button>
-    </form>
-</body>
-
-</html>"#,
-        ))
+        .body(template))
 }

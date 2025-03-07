@@ -5,10 +5,12 @@ use actix_web::dev::Server;
 use actix_web::{web, App, HttpServer};
 use actix_web_flash_messages::storage::CookieMessageStore;
 use actix_web_flash_messages::FlashMessagesFramework;
+use once_cell::sync::Lazy;
 use secrecy::{ExposeSecret, SecretString};
 use sqlx::postgres::PgPoolOptions;
 use sqlx::PgPool;
 use std::net::TcpListener;
+use tera::Tera;
 use tracing_actix_web::TracingLogger;
 
 use crate::configuration::{DatabaseSettings, Settings};
@@ -17,6 +19,18 @@ use crate::routes::{
     admin_dashboard, confirm, health_check, home, login, login_form, publish_newsletter, subscribe,
 };
 
+static TEMPLATES: Lazy<Tera> = Lazy::new(|| {
+    let mut tera = match Tera::new("src/templates/**/*") {
+        Ok(t) => t,
+        Err(e) => {
+            println!("Parsing error(s): {}", e);
+            std::process::exit(1);
+        }
+    };
+    tera.autoescape_on(vec![".html"]);
+    tera
+});
+
 pub struct Application {
     port: u16,
     server: Server,
@@ -24,6 +38,8 @@ pub struct Application {
 
 impl Application {
     pub async fn build(configuration: Settings) -> Result<Self, anyhow::Error> {
+        let tera = Lazy::force(&TEMPLATES);
+
         let connection_pool = get_connection_pool(&configuration.database);
 
         let sender_email = configuration
@@ -51,6 +67,7 @@ impl Application {
             configuration.application.base_url,
             configuration.application.hmac_secret,
             configuration.redis_uri,
+            tera,
         )
         .await?;
 
@@ -81,6 +98,7 @@ pub async fn run(
     base_url: String,
     hmac_secret: SecretString,
     redis_uri: SecretString,
+    tera: &Tera,
 ) -> Result<Server, anyhow::Error> {
     let secret_key = Key::from(hmac_secret.expose_secret().as_bytes());
 
@@ -92,6 +110,8 @@ pub async fn run(
     let db_pool = web::Data::new(db_pool);
     let email_client = web::Data::new(email_client);
     let base_url = web::Data::new(ApplicationBaseUrl(base_url));
+
+    let tera = web::Data::new(tera.clone());
 
     let server = HttpServer::new(move || {
         App::new()
@@ -112,6 +132,7 @@ pub async fn run(
             .app_data(db_pool.clone())
             .app_data(email_client.clone())
             .app_data(base_url.clone())
+            .app_data(tera.clone())
     })
     .listen(listener)?
     .run();

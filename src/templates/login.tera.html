@@ -8,6 +8,9 @@
 </head>
 
 <body>
+    {% if error_html %}
+    <p><i>{{ error_html }}</i></p>
+    {% endif %}
     <form action="/login" method="post">
         <label>Username
             <input type="text" placeholder="Enter Username" name="username">
