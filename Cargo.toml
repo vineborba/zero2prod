@@ -28,6 +28,7 @@ reqwest = { version = "0.12", features = [
 ], default-features = false }
 secrecy = { version = "0.10", features = ["serde"] }
 serde = { version = "1", features = ["derive"] }
+serde_json = "1"
 serde-aux = "4"
 sqlx = { version = "0.8", default-features = false, features = [
   "runtime-tokio-rustls",
@@ -44,7 +45,7 @@ tracing-actix-web = "0.7"
 tracing-bunyan-formatter = "0.3"
 tracing-log = "0.2"
 tracing-subscriber = { version = "0.3", features = ["registry", "env-filter"] }
-uuid = { version = "1", features = ["v4"] }
+uuid = { version = "1", features = ["v4", "serde"] }
 unicode-segmentation = "1"
 urlencoding = "2"
 validator = "0.20"
@@ -57,5 +58,4 @@ quickcheck = "1.0"
 quickcheck_macros = "1.0"
 tokio = { version = "1", features = ["macros", "rt"] }
 wiremock = "0.6"
-serde_json = "1"
 linkify = "0.10"

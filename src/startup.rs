@@ -14,7 +14,7 @@ use tracing_actix_web::TracingLogger;
 use crate::configuration::{DatabaseSettings, Settings};
 use crate::email_client::EmailClient;
 use crate::routes::{
-    confirm, health_check, home, login, login_form, publish_newsletter, subscribe,
+    admin_dashboard, confirm, health_check, home, login, login_form, publish_newsletter, subscribe,
 };
 
 pub struct Application {
@@ -92,7 +92,6 @@ pub async fn run(
     let db_pool = web::Data::new(db_pool);
     let email_client = web::Data::new(email_client);
     let base_url = web::Data::new(ApplicationBaseUrl(base_url));
-    // let hmac_secret = web::Data::new(HmacSecret(hmac_secret.clone()));
 
     let server = HttpServer::new(move || {
         App::new()
@@ -102,8 +101,9 @@ pub async fn run(
                 secret_key.clone(),
             ))
             .wrap(TracingLogger::default())
-            .route("/", web::get().to(home))
             .route("/health_check", web::get().to(health_check))
+            .route("/", web::get().to(home))
+            .route("/admin/dashboard", web::get().to(admin_dashboard))
             .route("/login", web::get().to(login_form))
             .route("/login", web::post().to(login))
             .route("/subscriptions", web::post().to(subscribe))
@@ -112,7 +112,6 @@ pub async fn run(
             .app_data(db_pool.clone())
             .app_data(email_client.clone())
             .app_data(base_url.clone())
-        // .app_data(hmac_secret.clone())
     })
     .listen(listener)?
     .run();
