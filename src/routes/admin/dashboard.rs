@@ -4,22 +4,15 @@ use sqlx::PgPool;
 use tera::Tera;
 use uuid::Uuid;
 
-use crate::{
-    routes::ServerError,
-    session_state::TypedSession,
-    utils::{e500, see_other},
-};
+use crate::{authentication::UserId, routes::ServerError, utils::e500};
 
 pub async fn admin_dashboard(
-    session: TypedSession,
     pool: web::Data<PgPool>,
     tera: web::Data<Tera>,
+    user_id: web::ReqData<UserId>,
 ) -> Result<HttpResponse, actix_web::Error> {
-    let username = if let Some(user_id) = session.get_user_id().map_err(e500)? {
-        get_username(user_id, &pool).await.map_err(e500)?
-    } else {
-        return Ok(see_other("/login"));
-    };
+    let user_id = user_id.into_inner();
+    let username = get_username(*user_id, &pool).await.map_err(e500)?;
 
     let mut context = tera::Context::new();
 
