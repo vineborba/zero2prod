@@ -11,7 +11,7 @@ if ! [ -x "$(command -v sqlx)" ]; then
 fi
 
 # Check if a custom parameter has been set, otherwise use default values
-DB_PORT="${DB_PORT:=5433}"
+DB_PORT="${DB_PORT:=5432}"
 SUPERUSER="${SUPERUSER:=postgres}"
 SUPERUSER_PWD="${SUPERUSER_PWD:=postgres}"
 APP_USER="${APP_USER:=app}"

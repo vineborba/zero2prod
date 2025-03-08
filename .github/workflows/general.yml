@@ -9,6 +9,7 @@ env:
   APP_USER: app
   APP_USER_PWD: postgres
   APP_DB_NAME: newsletter
+  APP_ENVIRONMENT: ci
 
 jobs:
   test:
