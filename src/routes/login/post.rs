@@ -1,16 +1,14 @@
-use actix_web::{
-    error::InternalError,
-    http::{header::LOCATION, StatusCode},
-    web, HttpResponse, ResponseError,
-};
+use actix_web::{error::InternalError, http::StatusCode, web, HttpResponse, ResponseError};
 use actix_web_flash_messages::FlashMessage;
 use secrecy::SecretString;
 use sqlx::PgPool;
 
 use crate::{
     authentication::{validate_credentials, AuthError, Credentials},
+    domain::AdminPassword,
     routes::error_chain_fmt,
     session_state::TypedSession,
+    utils::see_other,
 };
 
 #[derive(serde::Deserialize)]
@@ -28,9 +26,14 @@ pub async fn login(
     pool: web::Data<PgPool>,
     session: TypedSession,
 ) -> Result<HttpResponse, InternalError<LoginError>> {
+    let password = AdminPassword::try_from(&form.0.password).map_err(|e| {
+        let e = anyhow::Error::msg(e);
+        login_redirect(LoginError::AuthError(e))
+    })?;
+
     let credentials = Credentials {
         username: form.0.username,
-        password: form.0.password,
+        password: password.into(),
     };
 
     tracing::Span::current().record("username", tracing::field::display(&credentials.username));
@@ -43,9 +46,7 @@ pub async fn login(
             session
                 .insert_user_id(user_id)
                 .map_err(|e| login_redirect(LoginError::UnexpectedError(e.into())))?;
-            Ok(HttpResponse::SeeOther()
-                .insert_header((LOCATION, "/admin/dashboard"))
-                .finish())
+            Ok(see_other("/admin/dashboard"))
         }
         Err(e) => {
             let e = match e {
@@ -59,10 +60,7 @@ pub async fn login(
 
 fn login_redirect(e: LoginError) -> InternalError<LoginError> {
     FlashMessage::error(e.to_string()).send();
-    let response = HttpResponse::SeeOther()
-        .insert_header((LOCATION, "/login".to_string()))
-        .finish();
-    InternalError::from_response(e, response)
+    InternalError::from_response(e, see_other("/login"))
 }
 
 #[derive(thiserror::Error)]

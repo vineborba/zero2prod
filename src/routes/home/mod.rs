@@ -8,7 +8,7 @@ use super::error_chain_fmt;
 
 pub async fn home(tera: web::Data<Tera>) -> Result<HttpResponse, ServerError> {
     let template = tera
-        .render("home.tera.html", &Context::new())
+        .render("home.html", &Context::new())
         .map_err(|e| ServerError::RenderError(e.into()))?;
 
     Ok(HttpResponse::Ok()

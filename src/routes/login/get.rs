@@ -23,7 +23,7 @@ pub async fn login_form(
     context.insert("error_html", &error_html);
 
     let template = tera
-        .render("login.tera.html", &context)
+        .render("login.html", &context)
         .map_err(|e| ServerError::RenderError(e.into()))?;
 
     Ok(HttpResponse::Ok()
