@@ -24,7 +24,7 @@ jobs:
           POSTGRES_PASSWORD: postgres
           POSTGRES_DB: postgres
         ports:
-          - 5432:5432
+          - 5433:5432
       redis:
         image: redis:7
         ports:
@@ -113,7 +113,7 @@ jobs:
           POSTGRES_PASSWORD: postgres
           POSTGRES_DB: postgres
         ports:
-          - 5432:5432
+          - 5433:5432
       redis:
         image: redis:7
         ports:
