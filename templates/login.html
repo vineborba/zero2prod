@@ -8,8 +8,8 @@
 </head>
 
 <body>
-    {% if error_html %}
-    <p><i>{{ error_html }}</i></p>
+    {% if message_html %}
+    <p><i>{{ message_html }}</i></p>
     {% endif %}
     <form action="/login" method="post">
         <label>Username

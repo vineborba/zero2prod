@@ -4,7 +4,7 @@ use secrecy::{ExposeSecret, SecretString};
 use sqlx::PgPool;
 
 use crate::{
-    authentication::{validate_credentials, AuthError, Credentials},
+    authentication::{self, validate_credentials, AuthError, Credentials},
     domain::AdminPassword,
     routes::get_username,
     session_state::TypedSession,
@@ -52,7 +52,7 @@ pub async fn change_password(
         };
     }
 
-    let _new_password = match AdminPassword::try_from(form.0.new_password.expose_secret()) {
+    let new_password = match AdminPassword::try_from(form.0.new_password.expose_secret()) {
         Ok(password) => password,
         Err(e) => {
             FlashMessage::error(e).send();
@@ -60,5 +60,9 @@ pub async fn change_password(
         }
     };
 
-    todo!()
+    authentication::change_password(user_id, new_password.into(), &pool)
+        .await
+        .map_err(e500)?;
+    FlashMessage::error("Your password has been changed.").send();
+    Ok(see_other("/admin/password"))
 }

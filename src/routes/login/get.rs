@@ -3,7 +3,7 @@ use actix_web::{
     http::header::ContentType,
     web, HttpResponse,
 };
-use actix_web_flash_messages::{IncomingFlashMessages, Level};
+use actix_web_flash_messages::IncomingFlashMessages;
 use tera::{Context, Tera};
 
 use crate::routes::ServerError;
@@ -12,15 +12,15 @@ pub async fn login_form(
     flash_messages: IncomingFlashMessages,
     tera: web::Data<Tera>,
 ) -> Result<HttpResponse, ServerError> {
-    let mut error_html: Option<String> = None;
+    let mut message_html: Option<String> = None;
 
-    for m in flash_messages.iter().filter(|m| m.level() == Level::Error) {
-        error_html = Some(m.content().into());
+    for m in flash_messages.iter() {
+        message_html = Some(m.content().into());
     }
 
     let mut context = Context::new();
 
-    context.insert("error_html", &error_html);
+    context.insert("message_html", &message_html);
 
     let template = tera
         .render("login.html", &context)
