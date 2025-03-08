@@ -7,7 +7,7 @@ application:
 
 database:
   host: "localhost"
-  port: 5433
+  port: 5432
   password: "postgres"
   username: "postgres"
   database_name: "newsletter"
