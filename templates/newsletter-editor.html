@@ -8,6 +8,9 @@
 </head>
 
 <body>
+    {% if message_html %}
+    <p><i>{{ message_html }}</i></p>
+    {% endif %}
     <h3>Send a newsleter issue</h3>
 
     <form action="/admin/newsletters" method="post">
@@ -31,6 +34,7 @@
 
         <button type="submit">Submit</button>
     </form>
+    <p><a href="/admin/dashboard">&lt; - Back</a></p>
 </body>
 
 </html>

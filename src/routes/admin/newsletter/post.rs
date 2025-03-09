@@ -1,14 +1,14 @@
-use actix_web::{http::header::ContentType, web, HttpResponse};
+use actix_web::{web, HttpResponse};
+use actix_web_flash_messages::FlashMessage;
 use anyhow::Context;
 use sqlx::PgPool;
-use tera::Tera;
 
 use crate::{
     authentication::UserId,
     domain::SubscriberEmail,
     email_client::EmailClient,
-    routes::{get_username, ServerError},
-    utils::e500,
+    routes::get_username,
+    utils::{e500, see_other},
 };
 
 #[derive(serde::Deserialize)]
@@ -28,7 +28,6 @@ pub async fn publish_newsletter(
     body: web::Form<BodyData>,
     pool: web::Data<PgPool>,
     email_client: web::Data<EmailClient>,
-    tera: web::Data<Tera>,
 ) -> Result<HttpResponse, actix_web::Error> {
     let user_id = user_id.into_inner();
     tracing::Span::current().record("user_id", tracing::field::display(&user_id));
@@ -57,15 +56,8 @@ pub async fn publish_newsletter(
             }
         }
     }
-    let context = tera::Context::new();
-
-    let template = tera
-        .render("newsletter-editor.html", &context)
-        .map_err(|e| ServerError::RenderError(e.into()))?;
-
-    Ok(HttpResponse::Ok()
-        .content_type(ContentType::html())
-        .body(template))
+    FlashMessage::info("The newsletter issue has been published!").send();
+    Ok(see_other("/admin/newsletters"))
 }
 
 struct ConfirmedSubscriber {
