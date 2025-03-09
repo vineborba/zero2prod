@@ -3,8 +3,8 @@ use argon2::{Algorithm, Argon2, Params, PasswordHasher, Version};
 use once_cell::sync::Lazy;
 use sqlx::{Connection, Executor, PgConnection, PgPool};
 use uuid::Uuid;
-
 use wiremock::MockServer;
+
 use zero2prod::configuration::{get_configuration, DatabaseSettings};
 use zero2prod::startup::{get_connection_pool, Application};
 use zero2prod::telemetry::{get_subscriber, init_subscriber};
@@ -48,11 +48,13 @@ impl TestApp {
             .expect("Failed to execute request.")
     }
 
-    pub async fn post_newsletters(&self, body: serde_json::Value) -> reqwest::Response {
+    pub async fn post_newsletters<Body>(&self, body: &Body) -> reqwest::Response
+    where
+        Body: serde::Serialize,
+    {
         self.api_client
-            .post(format!("{}/newsletters", self.address))
-            .basic_auth(&self.test_user.username, Some(&self.test_user.password))
-            .json(&body)
+            .post(format!("{}/admin/newsletters", self.address))
+            .form(&body)
             .send()
             .await
             .expect("Failed to execute request.")
@@ -111,6 +113,18 @@ impl TestApp {
 
     pub async fn get_admin_dashboard_html(&self) -> String {
         self.get_admin_dashboard().await.text().await.unwrap()
+    }
+
+    pub async fn get_newsletter_editor(&self) -> reqwest::Response {
+        self.api_client
+            .get(format!("{}/admin/newsletters", &self.address))
+            .send()
+            .await
+            .expect("Failed to execute request.")
+    }
+
+    pub async fn get_newsletter_editor_html(&self) -> String {
+        self.get_newsletter_editor().await.text().await.unwrap()
     }
 
     pub async fn get_change_password(&self) -> reqwest::Response {

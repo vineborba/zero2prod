@@ -4,5 +4,6 @@ mod health_check;
 mod helpers;
 mod login;
 mod newsletter;
+mod newsletter_editor;
 mod subscriptions;
 mod subscriptions_confirm;

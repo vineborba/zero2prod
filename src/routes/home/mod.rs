@@ -4,7 +4,7 @@ use actix_web::{
 };
 use tera::{Context, Tera};
 
-use super::error_chain_fmt;
+use crate::utils::error_chain_fmt;
 
 pub async fn home(tera: web::Data<Tera>) -> Result<HttpResponse, ServerError> {
     let template = tera

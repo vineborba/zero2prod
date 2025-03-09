@@ -6,9 +6,8 @@ use sqlx::PgPool;
 use crate::{
     authentication::{validate_credentials, AuthError, Credentials},
     domain::AdminPassword,
-    routes::error_chain_fmt,
     session_state::TypedSession,
-    utils::see_other,
+    utils::{error_chain_fmt, see_other},
 };
 
 #[derive(serde::Deserialize)]
@@ -27,7 +26,7 @@ pub async fn login(
     session: TypedSession,
 ) -> Result<HttpResponse, InternalError<LoginError>> {
     let password = AdminPassword::try_from(&form.0.password).map_err(|e| {
-        let e = anyhow::Error::msg(e);
+        let e = anyhow::anyhow!(e);
         login_redirect(LoginError::AuthError(e))
     })?;
 

@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Send newsletter issue</title>
+</head>
+
+<body>
+    <h3>Send a newsleter issue</h3>
+
+    <form action="/admin/newsletters" method="post">
+        <label>
+            Newsletter title
+            <input type="text" name="title">
+        </label>
+        <br>
+        <br>
+        <label>
+            Newsletter text content
+            <input type="text" name="text">
+        </label>
+        <br>
+        <br>
+        <label>
+            Newsletter HTML content
+            <input type="text" name="html">
+        </label>
+        <br>
+
+        <button type="submit">Submit</button>
+    </form>
+</body>
+
+</html>
