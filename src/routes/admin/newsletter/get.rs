@@ -1,6 +1,7 @@
 use actix_web::{http::header::ContentType, web, HttpResponse};
 use actix_web_flash_messages::IncomingFlashMessages;
 use tera::{Context, Tera};
+use uuid::Uuid;
 
 use crate::routes::ServerError;
 
@@ -16,7 +17,10 @@ pub async fn newsletter_editor(
 
     let mut context = Context::new();
 
+    let idempotency_key = Uuid::new_v4().to_string();
+
     context.insert("message_html", &message_html);
+    context.insert("idempotency_key", &idempotency_key);
 
     let template = tera
         .render("newsletter-editor.html", &context)
