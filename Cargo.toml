@@ -30,6 +30,7 @@ reqwest = { version = "0.12", features = [
 secrecy = { version = "0.10", features = ["serde"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
+serde_urlencoded = "0.7"
 serde-aux = "4"
 sqlx = { version = "0.8", default-features = false, features = [
   "runtime-tokio-rustls",
